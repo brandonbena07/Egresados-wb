@@ -1,0 +1,1 @@
+export const itemsIniciales = [ { id: 1, titulo: 'Primer Registro de Prueba' } ];
