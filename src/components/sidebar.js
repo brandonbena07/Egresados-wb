@@ -9,13 +9,28 @@ const MODULOS = [
   { id: 'catalogos', etiqueta: 'Catálogos', icono: 'catalogos' },
 ];
 
-const USUARIO = { nombre: 'Esteban Idárraga', rol: 'Encargado de Acreditación', iniciales: 'EI' };
+const USUARIO_POR_DEFECTO = { nombre: 'Esteban Idárraga', rol: 'Encargado de Acreditación' };
+
+const PALABRAS_SIN_INICIAL = ['de', 'del', 'la', 'las', 'los', 'y'];
+
+/** "Esteban Idárraga" -> "EI"; "Coordinación de Ingeniería" -> "CI" */
+const obtenerIniciales = (nombre) =>
+  nombre
+    .split(/\s+/)
+    .filter((palabra) => palabra && !PALABRAS_SIN_INICIAL.includes(palabra.toLowerCase()))
+    .slice(0, 2)
+    .map((palabra) => palabra[0].toUpperCase())
+    .join('');
 
 /**
  * Barra lateral fija. En pantallas angostas se vuelve un panel que se abre y cierra.
  * Devuelve { elemento, abrir, cerrar, alternar }.
+ *
+ * @param {object} [props]
+ * @param {{ nombre: string, rol: string }} [props.usuario]  usuario con sesión iniciada
+ * @param {() => void} [props.onCerrarSesion]
  */
-export function crearSidebar() {
+export function crearSidebar({ usuario = USUARIO_POR_DEFECTO, onCerrarSesion } = {}) {
   const elemento = document.createElement('div');
   elemento.className = 'sidebar-contenedor';
   elemento.innerHTML = `
@@ -46,17 +61,29 @@ export function crearSidebar() {
       </nav>
 
       <div class="sidebar__usuario">
-        <span class="sidebar__avatar" aria-hidden="true">${USUARIO.iniciales}</span>
+        <span class="sidebar__avatar" aria-hidden="true" data-avatar></span>
         <div class="sidebar__usuario-texto">
-          <span class="sidebar__nombre">${USUARIO.nombre}</span>
-          <span class="sidebar__rol">${USUARIO.rol}</span>
+          <span class="sidebar__nombre" data-nombre></span>
+          <span class="sidebar__rol" data-rol></span>
         </div>
+        <button type="button" class="sidebar__salir" aria-label="Cerrar sesión" title="Cerrar sesión" data-salir>
+          ${icono('salir', 20)}
+        </button>
       </div>
     </aside>
     <div class="sidebar__fondo" data-cerrar-menu></div>
   `;
 
   const panel = elemento.querySelector('.sidebar');
+
+  // Los datos del usuario se escriben con textContent (no con HTML) por seguridad.
+  elemento.querySelector('[data-avatar]').textContent = obtenerIniciales(usuario.nombre);
+  elemento.querySelector('[data-nombre]').textContent = usuario.nombre;
+  elemento.querySelector('[data-rol]').textContent = usuario.rol;
+
+  const botonSalir = elemento.querySelector('[data-salir]');
+  if (onCerrarSesion) botonSalir.addEventListener('click', onCerrarSesion);
+  else botonSalir.hidden = true;
 
   const abrir = () => {
     elemento.classList.add('sidebar-contenedor--abierto');

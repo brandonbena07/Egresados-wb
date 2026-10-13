@@ -1,1 +1,0 @@
-export function crearTarjetaItem(item) { const div = document.createElement('div'); div.textContent = item.titulo; return div; }

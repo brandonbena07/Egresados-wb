@@ -19,8 +19,14 @@ import { icono } from '../utils/iconos.js';
 /**
  * Orquesta la pantalla: ensambla los componentes y mantiene el estado del tablero.
  * Los componentes no se conocen entre sí; solo hablan con esta página.
+ *
+ * @param {HTMLElement} contenedor
+ * @param {object} [opciones]
+ * @param {{ nombre: string, rol: string }} [opciones.usuario]  usuario con sesión iniciada
+ * @param {() => void} [opciones.onCerrarSesion]
+ * @returns {{ desmontar: () => void }}
  */
-export function montarDashboardPage(contenedor) {
+export function montarDashboardPage(contenedor, { usuario, onCerrarSesion } = {}) {
   /* ---- Estado global del tablero ---- */
   const programas = listarProgramas();
   const anios = listarAnios();
@@ -32,7 +38,7 @@ export function montarDashboardPage(contenedor) {
   let solicitudActual = 0; // evita mostrar un reporte viejo si cambian los filtros mientras carga
 
   /* ---- Componentes ---- */
-  const sidebar = crearSidebar();
+  const sidebar = crearSidebar({ usuario, onCerrarSesion });
   const kpis = crearKpiCards();
   const graficas = crearChartsPanel();
   const panelReporte = crearReportPanel({
@@ -128,4 +134,10 @@ export function montarDashboardPage(contenedor) {
   }
 
   actualizarTablero();
+
+  return {
+    desmontar() {
+      graficas.destruir();
+    },
+  };
 }
