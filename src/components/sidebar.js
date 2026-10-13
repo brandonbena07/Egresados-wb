@@ -1,8 +1,8 @@
 import { icono } from '../utils/iconos.js';
+import logoUCC from '../assets/Logo_UCC2.jpg';
 
 const MODULOS = [
   { id: 'tablero', etiqueta: 'Tablero (Dashboard)', icono: 'tablero', activo: true },
-  { id: 'egresados', etiqueta: 'Egresados', icono: 'egresados' },
   { id: 'cargar-datos', etiqueta: 'Cargar datos', icono: 'cargar' },
   { id: 'reportes-cna', etiqueta: 'Reportes CNA', icono: 'reportes' },
   { id: 'calidad-datos', etiqueta: 'Calidad de datos', icono: 'calidad' },
@@ -36,16 +36,14 @@ export function crearSidebar({ usuario = USUARIO_POR_DEFECTO, onCerrarSesion } =
   elemento.innerHTML = `
     <aside class="sidebar" id="sidebar" aria-label="Navegación principal">
       <div class="sidebar__marca">
-        <!-- Reemplaza este ícono por el logo oficial de la UCC (archivo de imagen) -->
-        <span class="sidebar__logo" aria-hidden="true">U</span>
+        <img src="${logoUCC}" alt="Logo UCC" class="sidebar__logo-img" />
         <div class="sidebar__marca-texto">
           <span class="sidebar__facultad">FACULTAD DE INGENIERÍA</span>
-          <span class="sidebar__sistema">SIGE - UCC</span>
         </div>
       </div>
 
       <nav class="sidebar__nav">
-        <p class="sidebar__seccion" id="titulo-modulos">MÓDULOS ADMINISTRATIVOS</p>
+        <p class="sidebar__seccion" id="titulo-modulos"></p>
         <ul class="sidebar__lista" aria-labelledby="titulo-modulos">
           ${MODULOS.map(
             (m) => `

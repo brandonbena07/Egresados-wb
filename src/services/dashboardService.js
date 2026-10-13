@@ -135,6 +135,32 @@ function filasDistribucion(variable, categorias, conteos, total) {
 }
 
 const CONSTRUCTORES = {
+  general(ctx) {
+    const k = ctx.periodo.kpis;
+    const filas = [
+      { indicador: 'Total egresados', valor: k.totalEgresados, porcentaje: 100 },
+      { indicador: 'Tasa de empleabilidad', valor: k.tasaEmpleabilidad, porcentaje: k.tasaEmpleabilidad },
+      { indicador: 'Seguimiento vigente', valor: k.seguimientoVigente, porcentaje: k.seguimientoVigente },
+      { indicador: 'Formación posgradual', valor: k.formacionPosgradual, porcentaje: k.formacionPosgradual },
+      { indicador: 'Encuestas validadas', valor: k.encuestasValidadas, porcentaje: porcentajeDe(k.encuestasValidadas, k.totalEgresados) },
+    ];
+    return {
+      columnas: [
+        col('indicador', 'Indicador'),
+        col('valor', 'Valor', 'numero'),
+        col('porcentaje', 'Porcentaje (%)', 'porcentaje'),
+      ],
+      filas,
+      grafica: {
+        tipo: 'barras',
+        titulo: 'Indicadores generales del programa',
+        etiquetas: filas.map((f) => f.indicador),
+        series: [{ nombre: '% / Total', valores: filas.map((f) => f.porcentaje) }],
+        maximo: 100,
+      },
+    };
+  },
+
   perfil(ctx) {
     const { ubicacion, estrato } = DISTRIBUCIONES;
     const mujeres = ctx.periodo.mujeres;

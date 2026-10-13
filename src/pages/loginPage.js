@@ -1,5 +1,5 @@
 import { crearLoginForm } from '../components/loginForm.js';
-import logoUcc from '../assets/logoUcc.png';
+import logoUcc from '../assets/Logo_UCC2.jpg';
 
 const NOMBRE_UNIVERSIDAD = 'Universidad Cooperativa de Colombia';
 

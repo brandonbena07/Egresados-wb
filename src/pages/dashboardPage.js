@@ -11,9 +11,7 @@ import {
   listarCohortes,
   obtenerMetricasDashboard,
   generarReporteSimulado,
-  exportarTablero,
 } from '../services/dashboardService.js';
-import { descargarArchivo } from '../utils/descargas.js';
 import { icono } from '../utils/iconos.js';
 
 /**
@@ -44,22 +42,15 @@ export function montarDashboardPage(contenedor, { usuario, onCerrarSesion } = {}
   const panelReporte = crearReportPanel({
     reportes: listarReportes(),
     formatos: listarFormatos(),
+    programas,
+    anios,
+    obtenerCohortes: listarCohortes,
     onSeleccion: (reporteId) => {
       estado.reporteId = reporteId;
     },
     onGenerar: manejarGenerar,
   });
   const header = crearHeader({
-    programas,
-    anios,
-    programa: estado.programa,
-    anio: estado.anio,
-    onCambio: ({ programa, anio }) => {
-      estado.programa = programa;
-      estado.anio = anio;
-      actualizarTablero();
-    },
-    onExportar: manejarExportar,
     onAlternarMenu: sidebar.alternar,
   });
 
@@ -78,20 +69,19 @@ export function montarDashboardPage(contenedor, { usuario, onCerrarSesion } = {}
     header.elemento,
     kpis.elemento,
     estadoVacio,
-    panelReporte.elemento,
     graficas.elemento,
+    panelReporte.elemento,
   );
   app.append(sidebar.elemento, principal);
   contenedor.append(app);
 
   /* ---- Acciones ---- */
   function actualizarTablero() {
-    solicitudActual += 1; // invalida cualquier reporte en curso
+    solicitudActual += 1;
     const metricas = obtenerMetricasDashboard(estado);
 
     kpis.actualizar(metricas);
     graficas.actualizar(metricas);
-    header.habilitarExportar(Boolean(metricas));
 
     estadoVacio.hidden = Boolean(metricas);
     if (!metricas) {
@@ -102,35 +92,23 @@ export function montarDashboardPage(contenedor, { usuario, onCerrarSesion } = {}
           <p>No hay información de ${estado.programa} en ${estado.anio}. Elige otro año o programa.</p>
         </div>`;
     }
-
-    panelReporte.actualizarFiltros({
-      programa: estado.programa,
-      anio: estado.anio,
-      cohortes: listarCohortes(estado),
-    });
-    panelReporte.limpiarResultado();
   }
 
-  async function manejarGenerar({ reporteId, cohorte, formato }) {
+  async function manejarGenerar({ reporteId, programa, anio, cohorte, formato }) {
     const solicitud = ++solicitudActual;
+    // Actualizar cohortes disponibles según el programa y año elegidos en el panel
+    panelReporte.actualizarFiltros({
+      programa,
+      anio,
+      cohortes: listarCohortes({ programa, anio }),
+    });
     panelReporte.mostrarCargando();
     try {
-      const resultado = await generarReporteSimulado({
-        reporteId,
-        programa: estado.programa,
-        anio: estado.anio,
-        cohorte,
-        formato,
-      });
+      const resultado = await generarReporteSimulado({ reporteId, programa, anio, cohorte, formato });
       if (solicitud === solicitudActual) panelReporte.mostrarResultado(resultado);
     } catch (error) {
       if (solicitud === solicitudActual) panelReporte.mostrarError(error.message);
     }
-  }
-
-  function manejarExportar() {
-    const archivo = exportarTablero(estado);
-    if (archivo) descargarArchivo(archivo);
   }
 
   actualizarTablero();

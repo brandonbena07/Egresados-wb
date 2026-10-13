@@ -38,6 +38,12 @@ export const KPI_DEFINICIONES = [
 /* ------------------------------------------------------------------ */
 export const REPORTES = [
   {
+    id: 'general',
+    nombre: 'Reporte general',
+    aspecto: 'General',
+    descripcion: 'Resumen completo del programa: perfil, empleabilidad, formación posgradual y apreciación.',
+  },
+  {
     id: 'perfil',
     nombre: 'Perfil de egresados',
     aspecto: 'Aspecto 38',

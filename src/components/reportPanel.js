@@ -22,9 +22,12 @@ const FORMATEADORES_CELDA = {
  * @param {Array}  props.reportes   [{ id, nombre, aspecto, descripcion }]
  * @param {Array}  props.formatos   [{ id, etiqueta }]
  * @param {(reporteId: string|null) => void} props.onSeleccion
+ * @param {string[]} props.programas   lista de programas
+ * @param {number[]} props.anios        lista de años
+ * @param {(f: {programa: string, anio: number}) => string[]} props.obtenerCohortes   fn para obtener cohortes
  * @param {(f: {reporteId: string, cohorte: string, formato: string}) => void} props.onGenerar
  */
-export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar }) {
+export function crearReportPanel({ reportes, formatos, programas, anios, obtenerCohortes, onSeleccion, onGenerar }) {
   const elemento = document.createElement('section');
   elemento.className = 'card panel-reporte';
   elemento.setAttribute('aria-labelledby', 'titulo-generar-reporte');
@@ -48,8 +51,17 @@ export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar })
       </div>
 
       <div class="campo">
-        <span class="campo__etiqueta">Programa y año</span>
-        <p class="campo__solo-lectura" id="filtros-lectura"></p>
+        <label class="campo__etiqueta" for="rp-programa">Programa</label>
+        <select id="rp-programa" class="select">
+          ${programas.map((p) => `<option value="${p}">${p}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="campo">
+        <label class="campo__etiqueta" for="rp-anio">Año</label>
+        <select id="rp-anio" class="select">
+          ${anios.map((a) => `<option value="${a}">${a}</option>`).join('')}
+        </select>
       </div>
 
       <div class="campo">
@@ -61,12 +73,12 @@ export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar })
         <legend class="campo__etiqueta">Formato de salida</legend>
         <div class="segmentado">
           ${formatos
-            .map(
-              (f, i) => `
+      .map(
+        (f, i) => `
             <input type="radio" name="formato-salida" id="formato-${f.id}" value="${f.id}"${i === 0 ? ' checked' : ''} />
             <label for="formato-${f.id}">${f.etiqueta}</label>`,
-            )
-            .join('')}
+      )
+      .join('')}
         </div>
       </fieldset>
 
@@ -81,9 +93,10 @@ export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar })
   const formulario = elemento.querySelector('form');
   const selectReporte = elemento.querySelector('#select-reporte');
   const selectCohorte = elemento.querySelector('#select-cohorte');
+  const selectPrograma = elemento.querySelector('#rp-programa');
+  const selectAnio = elemento.querySelector('#rp-anio');
   const textoDescripcion = elemento.querySelector('.campo__texto');
   const etiquetaAspecto = elemento.querySelector('.campo__descripcion .etiqueta-aspecto');
-  const filtrosLectura = elemento.querySelector('#filtros-lectura');
   const botonGenerar = elemento.querySelector('#btn-generar-reporte');
   const contenedorResultado = elemento.querySelector('#resultado-reporte');
 
@@ -108,6 +121,8 @@ export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar })
     if (!selectReporte.value) return;
     onGenerar({
       reporteId: selectReporte.value,
+      programa: selectPrograma.value,
+      anio: Number(selectAnio.value),
       cohorte: selectCohorte.value,
       formato: formatoSeleccionado(),
     });
@@ -159,9 +174,8 @@ export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar })
           ${icono('info', 20)}
           <div>
             <strong>Sin datos para esta combinación.</strong>
-            <p>No hay información de ${resultado.programa} en ${resultado.anio}${
-              resultado.cohorte && resultado.cohorte !== 'todas' ? ` (cohorte ${resultado.cohorte})` : ''
-            }. Prueba con otro año o programa.</p>
+            <p>No hay información de ${resultado.programa} en ${resultado.anio}${resultado.cohorte && resultado.cohorte !== 'todas' ? ` (cohorte ${resultado.cohorte})` : ''
+        }. Prueba con otro año o programa.</p>
           </div>
         </div>`);
       return;
@@ -271,9 +285,24 @@ export function crearReportPanel({ reportes, formatos, onSeleccion, onGenerar })
     };
   }
 
-  /* ---- Filtros de lectura ---- */
-  function actualizarFiltros({ programa, anio, cohortes }) {
-    filtrosLectura.textContent = `${programa} · ${anio}`;
+  /* ---- Cohortes ---- */
+  function actualizarCohortes() {
+    const cohortes = obtenerCohortes
+      ? obtenerCohortes({ programa: selectPrograma.value, anio: Number(selectAnio.value) })
+      : [];
+    const anterior = selectCohorte.value;
+    selectCohorte.innerHTML = [
+      '<option value="todas">Todas las cohortes</option>',
+      ...cohortes.map((c) => `<option value="${c}">${c}</option>`),
+    ].join('');
+    if (cohortes.includes(anterior)) selectCohorte.value = anterior;
+  }
+
+  selectPrograma.addEventListener('change', actualizarCohortes);
+  selectAnio.addEventListener('change', actualizarCohortes);
+  actualizarCohortes(); // inicializar al montar
+
+  function actualizarFiltros({ cohortes }) {
     const anterior = selectCohorte.value;
     selectCohorte.innerHTML = [
       '<option value="todas">Todas las cohortes</option>',
